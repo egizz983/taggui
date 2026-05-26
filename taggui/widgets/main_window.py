@@ -27,6 +27,7 @@ from widgets.image_list import ImageList
 from widgets.image_tags_editor import ImageTagsEditor
 from widgets.image_viewer import ImageViewer
 from widgets.tag_statistics import TagStatistics
+from widgets.dataset_analysis import DatasetAnalysis
 
 ICON_PATH = Path('images/icon.ico')
 GITHUB_REPOSITORY_URL = 'https://github.com/jhc13/taggui'
@@ -84,11 +85,20 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea,
                            self.auto_captioner)
 
+        # TagStatistics must be created before DatasetAnalysis because
+        # we tabify DatasetAnalysis next to it.
         self.tag_statistics = TagStatistics(
             self.image_list_model, self.tag_counter_model,
             tokenizer, tag_separator)
         self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea,
                            self.tag_statistics)
+
+        self.dataset_analysis = DatasetAnalysis(
+            self.image_list_model, self.tag_counter_model,
+            tokenizer, tag_separator)
+        self.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea,
+                           self.dataset_analysis)
+        self.tabifyDockWidget(self.tag_statistics, self.dataset_analysis)
         self.tabifyDockWidget(self.all_tags_editor, self.tag_statistics)
         self.tabifyDockWidget(self.tag_statistics, self.auto_captioner)
         self.all_tags_editor.raise_()
@@ -115,6 +125,8 @@ class MainWindow(QMainWindow):
         self.toggle_all_tags_editor_action = QAction('All Tags', parent=self)
         self.toggle_tag_statistics_action = QAction('Tag Statistics',
                                                     parent=self)
+        self.toggle_dataset_analysis_action = QAction('Dataset Analysis',
+                                                      parent=self)
         self.toggle_auto_captioner_action = QAction('Auto-Captioner',
                                                     parent=self)
         self.create_menus()
@@ -372,6 +384,7 @@ class MainWindow(QMainWindow):
         self.toggle_image_tags_editor_action.setCheckable(True)
         self.toggle_all_tags_editor_action.setCheckable(True)
         self.toggle_tag_statistics_action.setCheckable(True)
+        self.toggle_dataset_analysis_action.setCheckable(True)
         self.toggle_auto_captioner_action.setCheckable(True)
         self.toggle_image_list_action.triggered.connect(
             lambda is_checked: self.image_list.setVisible(is_checked))
@@ -381,12 +394,15 @@ class MainWindow(QMainWindow):
             lambda is_checked: self.all_tags_editor.setVisible(is_checked))
         self.toggle_tag_statistics_action.triggered.connect(
             lambda is_checked: self.tag_statistics.setVisible(is_checked))
+        self.toggle_dataset_analysis_action.triggered.connect(
+            lambda is_checked: self.dataset_analysis.setVisible(is_checked))
         self.toggle_auto_captioner_action.triggered.connect(
             lambda is_checked: self.auto_captioner.setVisible(is_checked))
         view_menu.addAction(self.toggle_image_list_action)
         view_menu.addAction(self.toggle_image_tags_editor_action)
         view_menu.addAction(self.toggle_all_tags_editor_action)
         view_menu.addAction(self.toggle_tag_statistics_action)
+        view_menu.addAction(self.toggle_dataset_analysis_action)
         view_menu.addAction(self.toggle_auto_captioner_action)
 
         help_menu = menu_bar.addMenu('Help')
@@ -562,6 +578,9 @@ class MainWindow(QMainWindow):
         self.tag_statistics.visibilityChanged.connect(
             lambda: self.toggle_tag_statistics_action.setChecked(
                 self.tag_statistics.isVisible()))
+        self.dataset_analysis.visibilityChanged.connect(
+            lambda: self.toggle_dataset_analysis_action.setChecked(
+                self.dataset_analysis.isVisible()))
 
     def connect_auto_captioner_signals(self):
         self.auto_captioner.caption_generated.connect(
